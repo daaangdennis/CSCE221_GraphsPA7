@@ -58,11 +58,53 @@ template <typename T>
 std::list<value_type<T>> topologicalSort(const WeightedGraph<T>& graph)
 {
     std::unordered_map<value_type<T>, int> indegrees;
-    std::unordered_map<value_type<T>, int> topological_numbers;
+    //std::unordered_map<value_type<T>, int> topological_numbers;
 
-    // TODO
+    // Calculate indegrees
+    computeIndegrees(graph, indegrees);
 
-    return std::list<value_type<T>>();
+    // Create queue and list
+    std::queue<value_type<T>> q;
+    std::list<value_type<T>> l;
+
+    // Add vertices with indegree of 0
+    for(auto it = graph.begin(); it != graph.end(); it++)
+    {
+        value_type<T> vertex = it->first;
+        if(indegrees[vertex] == 0)
+        {
+            q.push(vertex);
+        }
+    }
+
+    // Keep looping if there are still vertices to be processed 
+    while(q.size() > 0)
+    {
+        value_type<T> vert = q.front(); // Take first vertex
+        q.pop(); // Pop it from queue
+
+        l.push_back(vert); // Add vertex to sorted list
+
+        // For every connected vertex from current vertex, subtract indegree by 1
+        for(auto [dst_vertex, weight]: graph.at(vert))
+        {
+            indegrees[dst_vertex] -= 1;
+
+            // If indegree for connected vertex is 0 after subtraction, add it to queue
+            if(indegrees[dst_vertex] == 0)
+            {
+                q.push(dst_vertex);
+            }
+        }
+    }
+
+    // If the list does not contain all vertices, then no topological ordering exists
+    if(l.size() != graph.size())
+    {
+        l.clear();
+    }
+
+    return l;
 }
 
 template <typename T>
