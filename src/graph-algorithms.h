@@ -33,16 +33,71 @@
 template <typename T>
 std::list<value_type<T>> dijkstrasAlgorithm(const WeightedGraph<T>& graph, vertex_type<T> initial_node, vertex_type<T> destination_node)
 {
+    
     std::unordered_map<value_type<T>, weight_type<T>> distances;
     std::unordered_map<value_type<T>, std::optional<value_type<T>>> predecessors;
+
+    initializeSingleSource(graph, initial_node, distances, predecessors);
+
     std::unordered_set<value_type<T>> s;
     std::priority_queue<value_type<T>, std::vector<value_type<T>>, DijkstraComparator<T>> q(DijkstraComparator<T>{distances});
 
-    // TODO implement Dijkstra's Algorithm
+    for(auto it = graph.begin(); it != graph.end(); it++)
+    {
+        value_type<T> vertex = it->first;
+        q.push(vertex);
+    }
 
-    // TODO create list by walking backwards through predecessors from the end
+    while(q.size() > 0)
+    {
+        value_type<T> u = q.top();
+        if(distances[u] == infinity<T>())
+        {
+            break;
+        }
+        q.pop();
 
-    return std::list<value_type<T>>();
+        if(s.find(u) == s.end())
+        {
+            s.insert(u);
+        }
+
+        
+        for(auto p: graph.at(u))
+        {
+            value_type<T> v = p.first;
+            weight_type<T> w = p.second;
+            
+            if(s.find(v) != s.end())
+            {
+                continue;
+            }
+
+            bool r = relax<T>(u, v, w, distances, predecessors);
+
+            if(r)
+            {
+                updateHeap(q, distances);
+            }
+        }
+    }
+
+    // Create list by walking backwards through predecessors from the end
+    std::list<value_type<T>> l;
+    
+    value_type<T> node = destination_node;
+    while(predecessors[node].has_value())
+    {
+        l.push_front(node);
+        node = predecessors[node].value();
+    }
+
+    if(l.size() > 0 || initial_node == destination_node)
+    {
+        l.push_front(initial_node);
+    }
+
+    return l;
 }
 
 #include "top-sort-helpers.h"
